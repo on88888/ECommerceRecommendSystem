@@ -15,8 +15,8 @@ import redis.clients.jedis.Jedis
  */
 // 连接助手对象
 object ConnHelper extends Serializable {
-  lazy val jedis = new Jedis("hadoop105")
-  lazy val mongoClient = MongoClient(MongoClientURI("mongodb://hadoop105:27017/recommender"))
+  lazy val jedis = new Jedis("ERS")
+  lazy val mongoClient = MongoClient(MongoClientURI("mongodb://ERS:27017/recommender"))
 }
 
 case class MongConfig(uri: String, db: String)
@@ -42,7 +42,7 @@ object StreamingRecommender {
   def main(args: Array[String]): Unit = {
     val config = Map(
       "spark.cores" -> "local[*]",
-      "mongo.uri" -> "mongodb://hadoop105:27017/recommender",
+      "mongo.uri" -> "mongodb://ERS:27017/recommender",
       "mongo.db" -> "recommender",
       "kafka.topic" -> "recommender"
     )
@@ -73,7 +73,7 @@ object StreamingRecommender {
 
     //创建到Kafka的连接
     val kafkaPara = Map(
-      "bootstrap.servers" -> "hadoop105:9092",
+      "bootstrap.servers" -> "ERS:9092",
       "key.deserializer" -> classOf[StringDeserializer],
       "value.deserializer" -> classOf[StringDeserializer],
       "group.id" -> "recommender",

@@ -45,7 +45,7 @@ object DataLoader {
   def main(args: Array[String]): Unit = {
     val config = Map(
       "spark.cores" -> "local[*]",
-      "mongo.uri" -> "mongodb://hadoop105:27017/recommender",
+      "mongo.uri" -> "mongodb://ERS:27017/recommender",
       "mongo.db" -> "recommender"
     )
     // 创建一个spark config
