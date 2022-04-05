@@ -56,10 +56,12 @@ object OfflineRecommender {
 
     // 核心计算过程
     // 1. 训练隐语义模型
-    val trainData = ratingRDD.map(x=>Rating(x._1,x._2,x._3))
+    val trainData = ratingRDD
+      .map(x=>Rating(x._1,x._2,x._3))
     // 定义模型训练的参数，rank隐特征个数，iterations迭代词数，lambda正则化系数
     val ( rank, iterations, lambda ) = ( 5, 10, 0.01 )
-    val model = ALS.train( trainData, rank, iterations, lambda )
+    val model = ALS
+      .train( trainData, rank, iterations, lambda )
 
     // 2. 获得预测评分矩阵，得到用户的推荐列表
     // 用userRDD和productRDD做一个笛卡尔积，得到空的userProductsRDD表示的评分矩阵
@@ -69,13 +71,11 @@ object OfflineRecommender {
     // 从预测评分矩阵中提取得到用户推荐列表
     val userRecs = preRating.filter(_.rating>0)
       .map(
-        rating => ( rating.user, ( rating.product, rating.rating ) )
-      )
+        rating => ( rating.user, ( rating.product, rating.rating )))
       .groupByKey()
-      .map{
-        case (userId, recs) =>
-          UserRecs( userId, recs.toList.sortWith(_._2>_._2).take(USER_MAX_RECOMMENDATION).map(x=>Recommendation(x._1,x._2)) )
-      }
+      .map{ case (userId, recs) => UserRecs(userId, recs.toList
+        .sortWith(_._2>_._2).take(USER_MAX_RECOMMENDATION)
+          .map(x=>Recommendation(x._1,x._2)) )}
       .toDF()
     userRecs.write
       .option("uri", mongoConfig.uri)
@@ -103,7 +103,8 @@ object OfflineRecommender {
       .groupByKey()
       .map{
         case (productId, recs) =>
-          ProductRecs( productId, recs.toList.sortWith(_._2>_._2).map(x=>Recommendation(x._1,x._2)) )
+          ProductRecs( productId, recs.toList.sortWith(_._2>_._2)
+            .map(x=>Recommendation(x._1,x._2)) )
       }
       .toDF()
     productRecs.write
@@ -115,6 +116,7 @@ object OfflineRecommender {
 
     spark.stop()
   }
+  // 计算两个商品之间的余弦相似度
   def consinSim(product1: DoubleMatrix, product2: DoubleMatrix): Double ={
     product1.dot(product2)/ ( product1.norm2() * product2.norm2() )
   }
