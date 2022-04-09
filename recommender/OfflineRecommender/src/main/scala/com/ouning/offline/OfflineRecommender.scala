@@ -6,7 +6,7 @@ import org.apache.spark.sql.SparkSession
 import org.jblas.DoubleMatrix
 
 
-case class ProductRating( userId: Int, productId: Int, score: Double, timestamp: Int )
+case class ProductRating( userId: Int, productId: Int, score: Double, timestamp: Long )
 case class MongoConfig( uri: String, db: String )
 
 // 定义标准推荐对象

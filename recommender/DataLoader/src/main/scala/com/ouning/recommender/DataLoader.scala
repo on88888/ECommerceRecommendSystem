@@ -25,7 +25,7 @@ case class Product( productId: Int, name: String, imageUrl: String, categories: 
   * 5.0         评分
   * 1395676800  时间戳
   */
-case class Rating( userId: Int, productId: Int, score: Double, timestamp: Int )
+case class Rating( userId: Int, productId: Int, score: Double, timestamp: Long )
 
 /**
   * MongoDB连接配置

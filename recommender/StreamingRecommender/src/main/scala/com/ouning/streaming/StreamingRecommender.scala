@@ -86,7 +86,7 @@ object StreamingRecommender {
     // 产生评分流
     val ratingStream = kafkaStream.map { case msg =>
       var attr = msg.value().split("\\|")
-      (attr(0).toInt, attr(1).toInt, attr(2).toDouble, attr(3).toInt)
+      (attr(0).toInt, attr(1).toInt, attr(2).toDouble, attr(3).toLong)
     }
 
     // 核心实时推荐算法
