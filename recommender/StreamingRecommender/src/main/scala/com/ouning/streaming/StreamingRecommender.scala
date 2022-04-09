@@ -89,23 +89,24 @@ object StreamingRecommender {
       (attr(0).toInt, attr(1).toInt, attr(2).toDouble, attr(3).toLong)
     }
 
-    // 核心实时推荐算法
+    // 核心实时推荐算法(定义评分流的处理流程)
     ratingStream.foreachRDD { rdd =>
       rdd.map { case (userId, productId, score, timestamp) =>
         println(">>>>>>>>>>>>>>>>")
-
-        //获取当前最近的M次商品评分
-        val userRecentlyRatings = getUserRecentlyRating(MAX_USER_RATINGS_NUM, userId, ConnHelper.jedis)
-
-        //获取商品P最相似的K个商品
-        val simProducts = getTopSimProducts(MAX_SIM_PRODUCTS_NUM, productId, userId, simProductsMatrixBroadCast.value)
-
-        //计算待选商品的推荐优先级
-        val streamRecs = computeProductScores(simProductsMatrixBroadCast.value, userRecentlyRatings, simProducts)
-
-        //将数据保存到MongoDB
+        //1.取出redis当前用户的最近评分，
+        // 保存成一个数组Array[(productId, score)]（获取当前最近的M次商品评分）
+        val userRecentlyRatings = getUserRecentlyRating(
+          MAX_USER_RATINGS_NUM, userId, ConnHelper.jedis)
+        //2.从相似度矩阵中获取当前商品最相似的商品列表，作为备选列表，
+        // 保存成一个数组Array[(productId, score)](获取商品P最相似的K个商品)
+        val simProducts = getTopSimProducts(
+          MAX_SIM_PRODUCTS_NUM, productId, userId, simProductsMatrixBroadCast.value)
+        //3.计算每个备选商品的推荐优先级，得到当前用户的实时推荐列表，
+        // （保存成一个数组Array[(productId, score)]计算待选商品的推荐优先级）
+        val streamRecs = computeProductScores(
+          simProductsMatrixBroadCast.value, userRecentlyRatings, simProducts)
+        //4.把推荐列表保存到MongoDB
         saveRecsToMongoDB(userId, streamRecs)
-
       }.count()
     }
 
@@ -115,17 +116,19 @@ object StreamingRecommender {
   }
 
   import scala.collection.JavaConversions._
-
   /**
    * 获取当前最近的M次商品评分
-   *
+   * 从用户的队列中取出num个评分
    * @param num    评分的个数
    * @param userId 谁的评分
    * @return
    */
-  def getUserRecentlyRating(num: Int, userId: Int, jedis: Jedis): Array[(Int, Double)] = {
-    //从用户的队列中取出num个评分
-    jedis.lrange("userId:" + userId.toString, 0, num).map { item =>
+  def getUserRecentlyRating(num: Int, userId: Int, jedis: Jedis):
+  Array[(Int, Double)] = {
+    //从redis中用户的评分队列里获取评分数据，list键名为uid:USERID,
+    //值格式是 PRODUCTID:SCORE
+    jedis.lrange("userId:" + userId.toString, 0, num)
+      .map { item =>
       val attr = item.split("\\:")
       (attr(0).trim.toInt, attr(1).trim.toDouble)
     }.toArray
@@ -142,15 +145,21 @@ object StreamingRecommender {
    * @param mongConfig  MongoDB的配置
    * @return
    */
-  def getTopSimProducts(num: Int, productId: Int, userId: Int, simProducts: scala.collection.Map[Int, scala.collection.immutable.Map[Int, Double]])(implicit mongConfig: MongConfig): Array[Int] = {
+  //获取当前商品的相似列表，并过滤掉用户已经评分过的，作为备选列表
+  def getTopSimProducts(num: Int, productId: Int, userId: Int,
+                        simProducts: scala.collection.Map[Int, scala.collection.immutable.Map[Int, Double]])
+                       (implicit mongConfig: MongConfig): Array[Int] = {
     //从广播变量的商品相似度矩阵中获取当前商品所有的相似商品
     val allSimProducts = simProducts.get(productId).get.toArray
-    //获取用户已经观看过得商品
-    val ratingExist = ConnHelper.mongoClient(mongConfig.db)(MONGODB_RATING_COLLECTION).find(MongoDBObject("userId" -> userId)).toArray.map { item =>
-      item.get("productId").toString.toInt
-    }
+    //获得用户已经评分过的商品，过滤掉，排序输出
+    val ratingcollection = ConnHelper
+      .mongoClient(mongConfig.db)(MONGODB_RATING_COLLECTION)
+    val ratingExist = ratingcollection.find(MongoDBObject("userId" -> userId))
+      .toArray // 只需要productId
+      .map { item => item.get("productId").toString.toInt}
     //过滤掉已经评分过得商品，并排序输出
-    allSimProducts.filter(x => !ratingExist.contains(x._1)).sortWith(_._2 > _._2).take(num).map(x => x._1)
+    allSimProducts.filter(x => !ratingExist.contains(x._1))
+      .sortWith(_._2 > _._2).take(num).map(x => x._1)
   }
 
   /**
@@ -161,22 +170,23 @@ object StreamingRecommender {
    * @param topSimProducts      当前商品最相似的K个商品
    * @return
    */
+  //计算待选商品的推荐分数
   def computeProductScores(simProducts: scala.collection.Map[Int, scala.collection.immutable.Map[Int, Double]],
                            userRecentlyRatings: Array[(Int, Double)], topSimProducts: Array[Int]):
   Array[(Int, Double)] = {
-
-    //用于保存每一个待选商品和最近评分的每一个商品的权重得分
+    //定义一个长度可变数组ArrayBuffer，
+    // 用于保存每一个待选商品和最近评分的每一个商品的权重(基础)得分，(productId, score)
     val score = scala.collection.mutable.ArrayBuffer[(Int, Double)]()
-
+    // 定义两个map, 用于保存每个商品的高分和低分的计数器，productId -> count
     //用于保存每一个商品的增强因子数
     val increMap = scala.collection.mutable.HashMap[Int, Int]()
-
     //用于保存每一个商品的减弱因子数
     val decreMap = scala.collection.mutable.HashMap[Int, Int]()
 
     for (topSimProduct <- topSimProducts; userRecentlyRating <- userRecentlyRatings) {
+      // 从相似度矩阵中获取当前备选商品和已评分商品间的相似度
       val simScore = getProductsSimScore(simProducts, userRecentlyRating._1, topSimProduct)
-      if (simScore > 0.6) {
+      if (simScore > 0.6) {  // 按照公式进行加权计算， 得到基础评分
         score += ((topSimProduct, simScore * userRecentlyRating._2))
         if (userRecentlyRating._2 > 3) {
           increMap(topSimProduct) = increMap.getOrDefault(topSimProduct, 0) + 1
@@ -185,10 +195,14 @@ object StreamingRecommender {
         }
       }
     }
-
+    // 根据公式计算所有的推荐优先级，首先以productId做groupby
     score.groupBy(_._1).map { case (productId, sims) =>
-      (productId, sims.map(_._2).sum / sims.length + log(increMap.getOrDefault(productId, 1)) - log(decreMap.getOrDefault(productId, 1)))
-    }.toArray.sortWith(_._2 > _._2)
+      (productId, sims.map(_._2).sum / sims.length
+        + log(increMap.getOrDefault(productId, 1))
+        - log(decreMap.getOrDefault(productId, 1)))
+    }
+      //返回推荐列表，按照得分排序
+      .toArray.sortWith(_._2 > _._2)
 
   }
   // 其中，getProductSimScore是取候选商品和已评分商品的相似度，代码如下：
@@ -202,7 +216,9 @@ object StreamingRecommender {
    * @return
    */
   def getProductsSimScore(
-                           simProducts: scala.collection.Map[Int, scala.collection.immutable.Map[Int, Double]], userRatingProduct: Int, topSimProduct: Int): Double = {
+         simProducts: scala.collection.Map[Int, scala.collection.immutable.Map[Int, Double]],
+         userRatingProduct: Int,
+         topSimProduct: Int): Double = {
     simProducts.get(topSimProduct) match {
       case Some(sim) => sim.get(userRatingProduct) match {
         case Some(score) => score
@@ -214,8 +230,10 @@ object StreamingRecommender {
 
   // 而log是对数运算，这里实现为取10的对数（常用对数）：
   //取10的对数
+  // 自定义log函数，以N为底
   def log(m: Int): Double = {
-    math.log(m) / math.log(10)
+    val N = 10
+    math.log(m) / math.log(N)
   }
 
   /**
