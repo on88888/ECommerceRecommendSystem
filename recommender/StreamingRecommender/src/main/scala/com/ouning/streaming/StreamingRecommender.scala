@@ -73,7 +73,7 @@ object StreamingRecommender {
 
     //创建到Kafka的连接
     val kafkaPara = Map(
-      "bootstrap.servers" -> "ERS:9092",
+      "bootstrap.servers" -> "localhost:9092",
       "key.deserializer" -> classOf[StringDeserializer],
       "value.deserializer" -> classOf[StringDeserializer],
       "group.id" -> "recommender",
