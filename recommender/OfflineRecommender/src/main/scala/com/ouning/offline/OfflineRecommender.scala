@@ -107,6 +107,8 @@ object OfflineRecommender {
             .map(x=>Recommendation(x._1,x._2)) )
       }
       .toDF()
+    //展示商品余弦相似度
+    //productRecs.show()
     productRecs.write
       .option("uri", mongoConfig.uri)
       .option("collection", PRODUCT_RECS)

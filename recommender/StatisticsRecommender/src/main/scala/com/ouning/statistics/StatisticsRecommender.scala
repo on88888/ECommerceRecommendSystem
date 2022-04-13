@@ -14,9 +14,9 @@ object StatisticsRecommender {
   // 定义mongodb中存储的表名
   val MONGODB_RATING_COLLECTION = "Rating"
 
-  val RATE_MORE_PRODUCTS = "RateMoreProducts"
-  val RATE_MORE_RECENTLY_PRODUCTS = "RateMoreRecentlyProducts"
-  val AVERAGE_PRODUCTS = "AverageProducts"
+  val RATE_MORE_PRODUCTS = "RateMoreProducts" //历史热门商品
+  val RATE_MORE_RECENTLY_PRODUCTS = "RateMoreRecentlyProducts" //近期热门商品
+  val AVERAGE_PRODUCTS = "AverageProducts" //优质商品统计
 
   def main(args: Array[String]): Unit = {
     val config = Map(

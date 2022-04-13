@@ -196,13 +196,16 @@ object StreamingRecommender {
       }
     }
     // 根据公式计算所有的推荐优先级，首先以productId做groupby
-    score.groupBy(_._1).map { case (productId, sims) =>
+    val tuples = score.groupBy(_._1).map { case (productId, sims) =>
       (productId, sims.map(_._2).sum / sims.length
         + log(increMap.getOrDefault(productId, 1))
         - log(decreMap.getOrDefault(productId, 1)))
-    }
-      //返回推荐列表，按照得分排序
-      .toArray.sortWith(_._2 > _._2)
+    }.toArray.sortWith(_._2 > _._2)
+    // 展示推荐列表
+    tuples.foreach(println)
+    println("===================分割线======================")
+    // 返回推荐列表
+    tuples
 
   }
   // 其中，getProductSimScore是取候选商品和已评分商品的相似度，代码如下：
