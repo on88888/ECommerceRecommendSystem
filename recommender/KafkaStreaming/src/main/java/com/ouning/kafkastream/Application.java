@@ -27,9 +27,9 @@ public class Application {
 
         // 定义拓扑构建器
         TopologyBuilder builder = new TopologyBuilder();
-        builder.addSource("SOURCE", from)
-                .addProcessor("PROCESSOR", ()->new LogProcessor(), "SOURCE")
-                .addSink("SINK", to, "PROCESSOR");
+        builder.addSource("SOURCE", from) // (输入: from)
+                .addProcessor("PROCESSOR", ()->new LogProcessor(), "SOURCE") // 通过自定义处理器:LogProcessor
+                .addSink("SINK", to, "PROCESSOR"); // 得到想要的数据 (输出: sink)
 
         // 创建kafka stream
         KafkaStreams streams = new KafkaStreams( builder, config );

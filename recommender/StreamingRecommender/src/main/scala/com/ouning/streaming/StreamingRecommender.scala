@@ -201,10 +201,7 @@ object StreamingRecommender {
         + log(increMap.getOrDefault(productId, 1))
         - log(decreMap.getOrDefault(productId, 1)))
     }.toArray.sortWith(_._2 > _._2)
-    // 展示推荐列表
-    tuples.foreach(println)
-    println("===================分割线======================")
-    // 返回推荐列表
+
     tuples
 
   }
