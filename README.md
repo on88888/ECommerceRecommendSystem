@@ -76,7 +76,7 @@
 
 **上传所需工具**
 
-![image-20220405173624390](工具环境搭建.assets/20220405173814.png)
+![image-20220405173624390](image/20220405173814.png)
 
 工具链接：https://pan.baidu.com/s/1H4kWBJKv9SG1OMgBrbAJQQ?pwd=1111 
 提取码：1111 
@@ -84,7 +84,7 @@
 
 **到Liunx上 (路径: /opt/software)**
 
-![image-20220405173552518](工具环境搭建.assets/20220405173817.png)
+![image-20220405173552518](image/20220405173817.png)
 
 ## 2.1 MongoDB（单节点）环境配置
 
@@ -128,7 +128,7 @@ logappend = true
 
 **完成MongoDB的安装后，启动MongoDB服务器：**
 
-![image-20220405174221836](工具环境搭建.assets/20220405191751.png)
+![image-20220405174221836](image/20220405191751.png)
 
 ```shell
 # 启动MongoDB服务器
@@ -160,13 +160,13 @@ logappend = true
 # 显示图片中的五个install则表示安装成功
 ```
 
-![image-20220405174729774](工具环境搭建.assets/20220405174731.png)
+![image-20220405174729774](image/20220405174731.png)
 
 > **常见错误**：在没有安装gcc环境下，如果执行了make，不会成功！安装环境后，第二次make有可能报错：
 >
 > Jemalloc/jemalloc.h:没有那个文件
 >
-> ![image-20220126181855479](工具环境搭建.assets/20220126181856.png)
+> ![image-20220126181855479](image/20220126181856.png)
 >
 > 解决： 运行 make distclean之后再make
 >
@@ -174,13 +174,13 @@ logappend = true
 >
 > ⑤编译完成后，安装，执行make install命令！
 >
-> ![image-20220126181911180](工具环境搭建.assets/20220126181912.png)
+> ![image-20220126181911180](image/20220126181912.png)
 >
 > ⑥文件会被安装到 /usr/local/bin目录
 >
-> ![img](工具环境搭建.assets/20220126181631.png)
+> ![img](image/20220126181631.png)
 >
-> ![img](工具环境搭建.assets/20220126181614.jpg)
+> ![img](image/20220126181614.jpg)
 >
 >  
 
@@ -210,7 +210,7 @@ dir "/opt/module/redis-4.0.2/rdbfile"
 
 **在安装完Redis之后，启动Redis**
 
-![image-20220405180733899](工具环境搭建.assets/20220405191828.png)
+![image-20220405180733899](image/20220405191828.png)
 
 ```shell
 # 启动Redis服务器
@@ -268,7 +268,7 @@ systemctl stop firewalld.service
 
 就可以访问了
 
-![image-20220405184414502](工具环境搭建.assets/20220405191948.png)
+![image-20220405184414502](image/20220405191948.png)
 
 
 
@@ -349,7 +349,7 @@ Mode: standalone
 [ouning@ERS zookeeper-3.4.10]$ bin/zkServer.sh stop
 ```
 
-![image-20220405185101701](工具环境搭建.assets/20220405192028.png)
+![image-20220405185101701](image/20220405192028.png)
 
 ## 2.5 Flume-ng（单节点）环境配置
 
@@ -363,7 +363,7 @@ Mode: standalone
 # 等待项目部署时使用 (等会处理)
 ```
 
-![2](工具环境搭建.assets/20220126190612.png)
+![2](image/20220126190612.png)
 
 ### 配置并启动flume
 
@@ -418,7 +418,7 @@ agent.channels.memoryChannel.capacity = 10000
 [ouning@ERS flume]$ ./bin/flume-ng agent -c ./conf/ -f ./conf/log-kafka.properties -n agent -Dflume.root.logger=INFO,console
 ```
 
-![image-20220405185505387](工具环境搭建.assets/20220405185506.png)
+![image-20220405185505387](image/20220405185506.png)
 
 
 
@@ -466,7 +466,7 @@ zookeeper.connect=ERS:2181
 [ouning@ERS kafka]$ bin/kafka-console-consumer.sh --bootstrap-server ERS:9092 --topic recommender
 ```
 
-![image-20220405185913802](工具环境搭建.assets/20220405192102.png)
+![image-20220405185913802](image/20220405192102.png)
 
 ## 安装JDK
 
@@ -513,11 +513,11 @@ Java(TM) SE Runtime Environment (build 1.8.0_212-b10)
 Java HotSpot(TM) 64-Bit Server VM (build 25.212-b10, mixed mode)
 ```
 
-![image-20220405173314575](工具环境搭建.assets/20220405191915.png)
+![image-20220405173314575](image/20220405191915.png)
 
 
 
-![image-20220126192423845](工具环境搭建.assets/20220126192425.png)
+![image-20220126192423845](image/20220126192425.png)
 
 ## 防火墙问题
 
@@ -525,17 +525,17 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.212-b10, mixed mode)
 	systemctl status firewalld
 	如果是这样就开着呢
 
-![img](工具环境搭建.assets/20220411223038.png)
+![img](image/20220411223038.png)
 
 ​	如果是这样就是关着
 
-![img](工具环境搭建.assets/20220411223106.png)
+![img](image/20220411223106.png)
 
 **2:暂时关闭防火墙**
 
 ​	systemctl stop firewalld
 
-![img](工具环境搭建.assets/20220411223134.png)
+![img](image/20220411223134.png)
 
 Linux永久关闭防火墙 firewalld和sellinux设置
 必须设置 最好设置永久性若是暂时关闭 下次开启还要设置 所以建议永久性关闭
@@ -544,7 +544,7 @@ Linux永久关闭防火墙 firewalld和sellinux设置
 	systemctl disable firewalld #永久关闭,即设置开机的时候不自动启动
 关闭 selinux：
 	修改配置文件（永久关闭selinux可以使用vi命令打开/etc/sysconfig/selinux 文件将SELINUX=disable）
-![img](工具环境搭建.assets/20220411223210.png)
+![img](image/20220411223210.png)
 
 然后reboot 重启虚拟机就OK了
 
